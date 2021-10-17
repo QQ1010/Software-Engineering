@@ -11,6 +11,7 @@
 nodemon 隨時更新頁面
 dotenv  設置環境
 
+## 
 ## create .gitignore
 .env
 node_modules
