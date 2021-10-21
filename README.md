@@ -15,7 +15,8 @@ dotenv  設置環境
 passport-local：存取local
 需要自行研究如要存取gmail或facebook
 
-## 
+## create .env
+SESSION_SECRET = secret
 ## create .gitignore
 .env
 node_modules
