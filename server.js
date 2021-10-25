@@ -8,8 +8,10 @@ const bcrypt = require('bcrypt');
 const passport = require('passport');
 const flash = require('express-flash');
 const session = require('express-session');
+const methodOverride = require('method-override');
 
-const initializePassport = require('./passport-config')
+const initializePassport = require('./passport-config');
+const { application } = require('express');
 initializePassport(
     passport,
     email => users.find(user => user.email === email),
@@ -26,30 +28,31 @@ server.use(session({
     resave: false,
     saveUninitialized: false
 }));
-server.use(passport.initialize());
-server.use(passport.session());
+server.use(passport.initialize())
+server.use(passport.session())
+server.use(methodOverride('_method'))
 
-server.get('/', (request, response) => {
-    response.render('../views/index.ejs', {name: 'Anila'});
+server.get('/', checkAuthenticated , (request, response) => {
+    response.render('../views/index.ejs', {name: request.user.name });
 })
 
-server.get('/login', (request, response) => {
+server.get('/login', checkNotAuthenticated , (request, response) => {
     response.render('../views/login.ejs');
 })
 
-server.get('/register', (request, response) => {
-    response.render('../views/register.ejs');
-})
-
 // 登入請求處理
-server.post('/login', passport.authenticate('local', {
+server.post('/login', checkNotAuthenticated ,passport.authenticate('local', {
     successRedirect: '/',
     failureRedirect: '/login',
     failureFlash: true   // 顯示錯誤訊息給使用者
 }));
 
+server.get('/register', checkNotAuthenticated , (request, response) => {
+    response.render('../views/register.ejs');
+})
+
 //註冊請求處理
-server.post('/register', async (request, response) => {
+server.post('/register', checkNotAuthenticated ,async (request, response) => {
     try {
         const hashedPassword = await bcrypt.hash(request.body.password, 10);
         users.push( {
@@ -64,5 +67,26 @@ server.post('/register', async (request, response) => {
     }
     console.log(users);
 });
+
+// 登出
+server.delete('/logout', (request, response) => {
+    request.logOut();
+    response.redirect('/login')
+})
+
+// 檢查登入狀況與處理使用者導向
+function checkAuthenticated(request, response, next) {
+    if(request.isAuthenticated()) {
+        return next();
+    }
+    response.redirect('/login');
+}
+
+function checkNotAuthenticated(request, response, next) {
+    if(request.isAuthenticated()) {
+        return response.redirect('/');
+    }
+    next()
+}
 
 server.listen(3000);
