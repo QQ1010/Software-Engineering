@@ -1,2 +1,6 @@
 .env
 node_modules
+accesstoken.txt
+emailreadonlytoken.json
+client_credentials.json
+gmail-api-token.json
